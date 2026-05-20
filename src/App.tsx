@@ -1,19 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const ImageWithFallback = ({ src, alt, fallback, className, loading = "eager" }: { src: string, alt: string, fallback: string, className?: string, loading?: "lazy" | "eager" }) => {
+const ImageWithFallback = ({ src, alt, fallback, className, loading = "lazy" }: { src: string, alt: string, fallback: string, className?: string, loading?: "lazy" | "eager" }) => {
   const [error, setError] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
   
   useEffect(() => {
     setError(false);
+    setFallbackError(false);
   }, [src]);
+
+  if (error && fallbackError) {
+    return <div className={`flex flex-col items-center justify-center bg-stone-100 text-stone-400 text-sm ${className}`}><span className="opacity-50 break-words px-2 text-center">{alt}</span></div>;
+  }
 
   return (
     <img 
       src={error ? fallback : src} 
       alt={alt} 
       className={className}
-      onError={() => !error && setError(true)}
+      onError={() => {
+        if (!error) setError(true);
+        else setFallbackError(true);
+      }}
       loading={loading}
     />
   );
@@ -480,7 +489,7 @@ export function TimelineSection() {
           <div className="w-full lg:flex-1 flex lg:justify-end px-2 mt-6 lg:mt-0">
              <div className="w-[85%] sm:w-[70%] lg:w-full aspect-[4/3] rounded-[1.5rem] sm:rounded-[2rem] bg-black/5 flex flex-col items-center justify-center relative overflow-hidden group shadow-sm shrink-0 mx-auto lg:mr-0">
                {activeData.image ? (
-                 <img src={activeData.image} alt={activeData.title} className="w-full h-full object-cover" />
+                 <img src={activeData.image} alt={activeData.title} loading="lazy" className="w-full h-full object-cover" />
                ) : (
                  <div className="text-center p-6">
                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-brand-primary/10 flex items-center justify-center mx-auto mb-4 text-brand-primary/40">
@@ -992,7 +1001,8 @@ Message: ${contactFormData.message}
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
+        poster="/newhero.jpg"
         className="w-[100%] h-auto rounded-[16px] md:rounded-[24px]"
       >
         <source src="/hero-video.mp4" type="video/mp4" />
@@ -1329,7 +1339,8 @@ Message: ${contactFormData.message}
               className="w-full h-full object-cover"
               controls
               playsInline
-              preload="auto"
+              preload="none"
+              poster="/legacy-story-new.png"
             >
               <source src="/legacy-video.mp4" type="video/mp4" />
               Your browser does not support the video tag.
@@ -1345,6 +1356,7 @@ Message: ${contactFormData.message}
             <img
               src="/heritage-banner.png?v=2"
               alt="Annapoorna Heritage"
+              loading="lazy"
               className="w-full h-auto object-cover rounded-[24px]"
             />
           </div>
@@ -1657,7 +1669,7 @@ Message: ${contactFormData.message}
           {/* Centered Brand Section */}
           <div className="flex flex-col items-center justify-center text-center gap-6 mb-16">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white flex items-center justify-center p-2 shadow-sm border border-[#e2d5bd]">
-              <img src="/logo.jpg" alt="Annapoorna Logo" className="w-full h-full object-contain rounded-full" />
+              <img src="/logo.jpg" alt="Annapoorna Logo" loading="lazy" className="w-full h-full object-contain rounded-full" />
             </div>
             
             <div className="flex flex-col items-center gap-2">

@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from 'motion/react';
 const ImageWithFallback = ({ src, alt, fallback, className, loading = "eager" }: { src: string, alt: string, fallback: string, className?: string, loading?: "lazy" | "eager" }) => {
   const [error, setError] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   
   useEffect(() => {
     setError(false);
     setFallbackError(false);
+    setLoaded(false);
   }, [src]);
 
   if (error && fallbackError) {
@@ -15,16 +17,23 @@ const ImageWithFallback = ({ src, alt, fallback, className, loading = "eager" }:
   }
 
   return (
-    <img 
-      src={error ? fallback : src} 
-      alt={alt} 
-      className={className}
-      onError={() => {
-        if (!error) setError(true);
-        else setFallbackError(true);
-      }}
-      loading={loading}
-    />
+    <>
+      {!loaded && !error && (
+         <div className={`absolute inset-0 bg-stone-200/50 animate-pulse ${className}`} />
+      )}
+      <img 
+        src={error ? fallback : src} 
+        alt={alt} 
+        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (!error) setError(true);
+          else setFallbackError(true);
+          setLoaded(true);
+        }}
+        loading={loading}
+      />
+    </>
   );
 };
 import { 
@@ -766,6 +775,30 @@ export default function App() {
   const [highlightedItems, setHighlightedItems] = useState<string[]>([]);
   const [showFestivalBanner, setShowFestivalBanner] = useState(true);
 
+  // Preload images for faster rendering on Vercel
+  useEffect(() => {
+    const imagesToPreload = [
+      "/logo.jpg",
+      "/newhero.jpg",
+      "/legacy-story-new.png",
+      "/heritage-banner.png?v=2",
+      "/share-banner.jpg",
+      "/1984.jpg", "/1990.jpg", "/2002.jpg", "/2026.jpg",
+      ...fullMenu.map(c => c.image).filter(Boolean)
+    ];
+    
+    // Slight delay to not block the initial render thread
+    const timeoutId = setTimeout(() => {
+      imagesToPreload.forEach(src => {
+        if (src) {
+          const img = new Image();
+          img.src = src;
+        }
+      });
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const activeFestival = getActiveFestival();
 

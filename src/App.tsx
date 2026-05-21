@@ -21,18 +21,18 @@ const ImageWithFallback = ({ src, alt, fallback, className = "", loading = "eage
   }
 
   return (
-    <img 
-      src={displaySrc} 
-      alt={alt} 
-      className={className}
-     onError={() => {
-  console.log("Image failed:", src);
-}}
-      loading={loading}
-      decoding="async"
-fetchPriority="high"
-    />
-  );
+  <img
+    src={displaySrc}
+    alt={alt}
+    className={className}
+    onError={() => {
+      setError(true);
+    }}
+    loading={loading}
+    decoding="async"
+    fetchPriority="high"
+  />
+);
 };
 
 const getCategoryFallback = () => {
@@ -92,7 +92,7 @@ const ImageCarousel = ({ images, fallbacks, alt, className, imageClassName, onIm
               src={src} 
               fallback={fallbacks[idx % (fallbacks.length || 1)]} 
               alt={`${alt} ${idx + 1}`} 
-              className={`w-full h-full transition-transform duration-700 group-hover/carousel:scale-[1.03] ${imageClassName || 'object-cover'}`} 
+              className={`w-full h-full ${imageClassName || 'object-cover'}`}
             />
           </div>
         ))}
@@ -787,29 +787,9 @@ export default function App() {
   const [showFestivalBanner, setShowFestivalBanner] = useState(true);
 
   // Preload images for faster rendering on Vercel
-  useEffect(() => {
-    const imagesToPreload = [
-      "/logo.jpg",
-      "/newhero.jpg",
-      "/legacy-story-new.png",
-      "/heritage-banner.png?v=2",
-      "/share-banner.jpg",
-      "/1984.jpg", "/1990.jpg", "/2002.jpg", "/2026.jpg",
-      
-    ];
+ 
     
-    // Slight delay to not block the initial render thread
-    const timeoutId = setTimeout(() => {
-      imagesToPreload.forEach(src => {
-        if (src) {
-          const img = new Image();
-          img.src = src;
-        }
-      });
-    }, 1500);
     
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   const activeFestival = getActiveFestival();
 
@@ -1046,7 +1026,7 @@ Message: ${contactFormData.message}
   muted
   loop
   playsInline
-  preload="auto"
+  preload="metadata"
   className="w-full h-auto object-cover rounded-[16px] md:rounded-[24px]"
 >
       
@@ -1174,7 +1154,7 @@ Message: ${contactFormData.message}
                      className={`flex justify-between items-start border-b pb-3 last:border-0 sm:[&:nth-last-child(-n+2)]:border-0 group gap-4 rounded-lg px-2 -mx-2 transition-colors ${isHighlighted ? 'bg-[#fdf6d0] border-[#c49a3a]/30' : 'border-stone-100'}`}
                    >
                      <div className="flex items-center gap-3">
-                        <div className={`w-1.5 h-1.5 rounded-full transition-colors shrink-0 ${isHighlighted ? 'bg-[#0b4d30] animate-pulse' : 'bg-[#d4b24c]'}`}></div>
+                        <div className={`w-1.5 h-1.5 rounded-full transition-colors shrink-0 ${isHighlighted ? 'bg-[#0b4d30]' : 'bg-[#d4b24c]'}`}></div>
                         <span className={`font-semibold text-[15px] leading-snug ${isHighlighted ? 'text-[#0b4d30] font-bold' : 'text-stone-800'}`}>{item.name}</span>
                      </div>
                    </motion.div>
@@ -1208,7 +1188,7 @@ Message: ${contactFormData.message}
               images={signatureMenuImages} 
               fallbacks={galleryFallbacks} 
               alt="Signature Menu Gallery" 
-              imageClassName="object-contain w-full h-full transform transition-transform duration-700"
+              imageClassName="object-contain w-full h-full"
               onImageClick={setLightboxImage}
             />
           </div>

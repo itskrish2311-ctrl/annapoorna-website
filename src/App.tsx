@@ -1,41 +1,52 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const ImageWithFallback = ({ src, alt, fallback, className, loading = "eager" }: { src: string, alt: string, fallback: string, className?: string, loading?: "lazy" | "eager" }) => {
+const ImageWithFallback = ({ src, alt, fallback, className = "", loading = "eager" }: { src: string, alt: string, fallback: string, className?: string, loading?: "lazy" | "eager" }) => {
   const [error, setError] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  
+
   useEffect(() => {
     setError(false);
     setFallbackError(false);
-    setLoaded(false);
   }, [src]);
 
+   const displaySrc = src;
+
   if (error && fallbackError) {
-    return <div className={`flex flex-col items-center justify-center bg-stone-100 text-stone-400 text-sm ${className}`}><span className="opacity-50 break-words px-2 text-center">{alt}</span></div>;
+    return (
+      <div className={`flex flex-col items-center justify-center bg-stone-100 text-stone-400 text-sm ${className}`}>
+        <span className="opacity-50 break-words px-2 text-center">{alt}</span>
+      </div>
+    );
   }
 
   return (
-    <>
-      {!loaded && !error && (
-         <div className={`absolute inset-0 bg-stone-200/50 animate-pulse ${className}`} />
-      )}
-      <img 
-        src={error ? fallback : src} 
-        alt={alt} 
-        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
-        onLoad={() => setLoaded(true)}
-        onError={() => {
-          if (!error) setError(true);
-          else setFallbackError(true);
-          setLoaded(true);
-        }}
-        loading={loading}
-      />
-    </>
+    <img 
+      src={displaySrc} 
+      alt={alt} 
+      className={className}
+     onError={() => {
+  console.log("Image failed:", src);
+}}
+      loading={loading}
+      decoding="async"
+fetchPriority="high"
+    />
   );
 };
+
+const getCategoryFallback = () => {
+  return "/placeholder.jpg";
+};
+
+const getTimelineFallback = () => {
+  return "/placeholder.jpg";
+};
+
+const galleryFallbacks = [
+  "/placeholder.jpg"
+];
+
 import { 
   Menu, X, MapPin, Phone, Clock, Leaf, 
   Utensils, PartyPopper, ChefHat, Candy,
@@ -284,10 +295,8 @@ const services = [
     gallery: {
       srcs: ["/Pure Veg Dining.jpg", "/Pure Veg Dining1.jpg", "/Pure Veg Dining2.jpg"],
       fallbacks: [
-        "https://images.unsplash.com/photo-1610192202657-36e7116cb9b0?q=80&w=2070&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=2070&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=2070&auto=format&fit=crop"
-      ]
+  "/placeholder.jpg"
+]
     }
   },
   {
@@ -299,9 +308,8 @@ const services = [
     gallery: {
       srcs: ["/Outdoor Catering1.jpg", "/Outdoor Catering2.jpg"],
       fallbacks: [
-        "https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=2070&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=2000&auto=format&fit=crop"
-      ]
+  "/placeholder.jpg"
+]
     }
   },
   {
@@ -312,11 +320,9 @@ const services = [
     icon: PartyPopper,
     gallery: {
       srcs: ["/partyhall.jpg", "/partyhall1.jpg", "/partyhall2.jpg"],
-      fallbacks: [
-        "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2098&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=2000&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1530103862676-de8892404eeb?q=80&w=2000&auto=format&fit=crop"
-      ]
+     fallbacks: [
+  "/placeholder.jpg"
+]
     }
   }
 ];
@@ -498,7 +504,12 @@ export function TimelineSection() {
           <div className="w-full lg:flex-1 flex lg:justify-end px-2 mt-6 lg:mt-0">
              <div className="w-[85%] sm:w-[70%] lg:w-full aspect-[4/3] rounded-[1.5rem] sm:rounded-[2rem] bg-black/5 flex flex-col items-center justify-center relative overflow-hidden group shadow-sm shrink-0 mx-auto lg:mr-0">
                {activeData.image ? (
-                 <img src={activeData.image} alt={activeData.title} className="w-full h-full object-cover" />
+                 <ImageWithFallback 
+                   src={activeData.image} 
+                   fallback={getTimelineFallback(activeData.year)}
+                   alt={activeData.title} 
+                   className="w-full h-full object-cover" 
+                 />
                ) : (
                  <div className="text-center p-6">
                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-brand-primary/10 flex items-center justify-center mx-auto mb-4 text-brand-primary/40">
@@ -784,7 +795,7 @@ export default function App() {
       "/heritage-banner.png?v=2",
       "/share-banner.jpg",
       "/1984.jpg", "/1990.jpg", "/2002.jpg", "/2026.jpg",
-      ...fullMenu.map(c => c.image).filter(Boolean)
+      
     ];
     
     // Slight delay to not block the initial render thread
@@ -795,7 +806,7 @@ export default function App() {
           img.src = src;
         }
       });
-    }, 100);
+    }, 1500);
     
     return () => clearTimeout(timeoutId);
   }, []);
@@ -1029,15 +1040,16 @@ Message: ${contactFormData.message}
 
     <div className="rounded-[16px] md:rounded-[32px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.18)] border border-stone-200 bg-white p-1 md:p-3">
 
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        poster="/newhero.jpg"
-        className="w-[100%] h-auto rounded-[16px] md:rounded-[24px]"
-      >
+      
+       <video
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="auto"
+  className="w-full h-auto object-cover rounded-[16px] md:rounded-[24px]"
+>
+      
         <source src="/hero-video.mp4" type="video/mp4" />
       </video>
 
@@ -1137,7 +1149,7 @@ Message: ${contactFormData.message}
             <div className="w-full md:w-[45%] h-64 md:h-auto relative">
                <ImageWithFallback
                  src={fullMenu.find(c => c.id === activeCategory)?.image || ""}
-                 fallback="https://images.unsplash.com/photo-1610192202657-36e7116cb9b0?q=80&w=1000&auto=format&fit=crop"
+                 fallback={getCategoryFallback(activeCategory)}
                  alt={fullMenu.find(c => c.id === activeCategory)?.name || "Menu category"}
                  className="w-full h-full object-cover"
                />
@@ -1194,7 +1206,7 @@ Message: ${contactFormData.message}
           <div className="relative w-full max-w-4xl mx-auto aspect-[3/4] sm:aspect-[2/3] md:aspect-[1/1.414] rounded-3xl overflow-hidden shadow-2xl border-4 md:border-8 border-white bg-stone-200 flex items-center justify-center">
             <ImageCarousel 
               images={signatureMenuImages} 
-              fallbacks={signatureMenuImages.map((_, idx) => `https://ui-avatars.com/api/?name=Gallery+${idx+1}&background=random&color=fff&size=512`)} 
+              fallbacks={galleryFallbacks} 
               alt="Signature Menu Gallery" 
               imageClassName="object-contain w-full h-full transform transition-transform duration-700"
               onImageClick={setLightboxImage}
@@ -1372,7 +1384,7 @@ Message: ${contactFormData.message}
               className="w-full h-full object-cover"
               controls
               playsInline
-              preload="auto"
+              preload="metadata"
               poster="/legacy-story-new.png"
             >
               <source src="/legacy-video.mp4" type="video/mp4" />
